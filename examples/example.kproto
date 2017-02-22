@@ -1,0 +1,19 @@
+// 登陆消息协议
+// 我的文档
+package go : examples // 测试一下
+package ts:examples
+
+message AuthMsg:101
+  Test uint32
+
+message Login1Msg:// 登陆消息
+  UserName uint32 // 账号
+	Password string:12
+  // Auth 认证Code
+  Auth				AuthMsg // 值
+  LastIP string:32
+
+// 登陆服务
+rpc LoginService:
+  Login (Login1Msg) AuthMsg
+	
