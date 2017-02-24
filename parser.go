@@ -24,9 +24,7 @@ const (
 )
 
 var (
-	ErrParse   = errors.New("代码编译出错")
-	ErrLine    = errors.New("错误行")
-	ErrComment = errors.New("注释行出错")
+	errLine    = errors.New("错误行")
 	errPackage = errors.New("包定义错误")
 )
 
@@ -118,7 +116,7 @@ func LoadProtoFile1(fname string) (out *FileDesc, err error) {
 		case KPT_SpaceLine, KPT_Comment:
 			continue
 		default:
-			error_print(ErrLine.Error())
+			error_print(errLine.Error())
 			continue
 		}
 	}

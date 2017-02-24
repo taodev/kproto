@@ -1,5 +1,10 @@
 package kproto
 
+import (
+	"errors"
+	"fmt"
+)
+
 type PackageDesc struct {
 	Lang string
 	Name string
@@ -15,6 +20,7 @@ type MessageDesc struct {
 	Id     uint16
 	Name   string
 	Fields []*FieldDesc
+	owner  *FileDesc
 }
 
 func (msg *MessageDesc) AddField(name, typ string, l uint16) {
@@ -24,6 +30,47 @@ func (msg *MessageDesc) AddField(name, typ string, l uint16) {
 	field.Length = l
 
 	msg.Fields = append(msg.Fields, field)
+}
+
+func (msg *MessageDesc) MaxSize() (n int, err error) {
+	for _, v := range msg.Fields {
+		fsize := 0
+		switch v.Type {
+		case "bool", "byte", "int8", "uint8", "string":
+			fsize = 1
+		case "int16", "uint16":
+			fsize = 2
+		case "int32", "uint32", "float32":
+			fsize = 4
+		case "int64", "uint64", "float64":
+			fsize = 6
+		default:
+			if v.Type == msg.Name {
+				err = errors.New("字段类型不能是自身")
+				return
+			}
+
+			other := msg.owner.GetMessage(v.Type)
+			if other == nil {
+				err = fmt.Errorf("无效字段类型: %s:%s", msg.Name, v.Type)
+				return
+			}
+
+			fsize, err = other.MaxSize()
+			if err != nil {
+				return
+			}
+		}
+
+		if v.Length > 0 {
+			fsize *= int(v.Length)
+			fsize += 2
+		}
+
+		n += fsize
+	}
+
+	return
 }
 
 type MethodDesc struct {
@@ -78,10 +125,21 @@ func (f *FileDesc) AddMessage(id uint16, name string) *MessageDesc {
 	msg.Id = id
 	msg.Name = name
 	msg.Fields = make([]*FieldDesc, 0)
+	msg.owner = f
 
 	f.Messages = append(f.Messages, msg)
 
 	return msg
+}
+
+func (f *FileDesc) GetMessage(name string) *MessageDesc {
+	for _, v := range f.Messages {
+		if v.Name == name {
+			return v
+		}
+	}
+
+	return nil
 }
 
 func (f *FileDesc) AddRPC(name string) *RPCDesc {

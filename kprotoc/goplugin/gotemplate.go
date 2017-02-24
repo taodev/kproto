@@ -23,6 +23,10 @@ func (msg *{{.Name}}) Write(w *kproto.Buffer) error {
 	}
 	{{end}}return err
 }
+
+func (msg *{{.Name}}) MaxSize() int {
+	return {{.MaxSize }}
+}
 {{end}}
 
 `
