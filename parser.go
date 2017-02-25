@@ -209,7 +209,8 @@ func parse_field(code string, out *FileDesc) (err error) {
 	}
 
 	var name, typ string
-	var length uint16
+	var length int
+	var size int
 
 	args, ok := regexp_find(code, `^\s+([A-Z][a-z0-9A-Z_]{0,31})\s*([a-z0-9A-Z_]{0,32})\s*(:)?\s*([0-9]*)\s*(//.*)?$`, 6)
 	if !ok {
@@ -241,15 +242,19 @@ func parse_field(code string, out *FileDesc) (err error) {
 			return
 		}
 
-		length = uint16(num)
+		length = int(num)
+		if typ == "string" {
+			size = length
+			length = 0
+		}
 	}
 
-	if typ == "string" && length <= 0 {
+	if typ == "string" && size <= 0 {
 		error_print(fmt.Sprintf("string类型必须定义最大长度"))
 		return
 	}
 
-	last_message.AddField(name, typ, length)
+	last_message.AddField(name, typ, length, size)
 
 	return
 }

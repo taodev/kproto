@@ -13,7 +13,8 @@ type PackageDesc struct {
 type FieldDesc struct {
 	Name   string
 	Type   string
-	Length uint16
+	Size   int
+	Length int
 }
 
 type MessageDesc struct {
@@ -23,11 +24,12 @@ type MessageDesc struct {
 	owner  *FileDesc
 }
 
-func (msg *MessageDesc) AddField(name, typ string, l uint16) {
+func (msg *MessageDesc) AddField(name, typ string, l, sz int) {
 	field := &FieldDesc{}
 	field.Name = name
 	field.Type = typ
 	field.Length = l
+	field.Size = sz
 
 	msg.Fields = append(msg.Fields, field)
 }
@@ -43,7 +45,7 @@ func (msg *MessageDesc) MaxSize() (n int, err error) {
 		case "int32", "uint32", "float32":
 			fsize = 4
 		case "int64", "uint64", "float64":
-			fsize = 6
+			fsize = 8
 		default:
 			if v.Type == msg.Name {
 				err = errors.New("字段类型不能是自身")
